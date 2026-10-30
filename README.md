@@ -26,7 +26,19 @@ The identity check tests completed fields and basic identifier shape. It does no
 
 ## Current contents
 
-This is a new collaboration scaffold, not the implemented security lab. No source code or history from the existing private project has been copied here. Existing work must be reviewed and explicitly cleared for public release before an import PR.
+M1 is available in [m1-lab/](m1-lab/README.md): the Next.js 14.2.24 example application, independent operator-gated panel, isolated Docker Compose package and setup/shutdown instructions. The shared M3/M4 interface is in [docs/contracts.md](docs/contracts.md).
+
+Only the existing M1 contribution was imported. Other members' code, private environment files and the old repository history are not included. The M3 runner, M4 defence targets and M5 evaluation remain separate work.
+
+Start from the repository root:
+
+```sh
+cd m1-lab
+node deploy/init-env.mjs
+docker compose up --build -d --wait
+```
+
+Open `http://127.0.0.1:4317`. Follow the M1 README for the separate operator and target logins and local configuration.
 
 No lab is deployed, and no CVE experiment or remediation result is claimed by this repository setup.
 

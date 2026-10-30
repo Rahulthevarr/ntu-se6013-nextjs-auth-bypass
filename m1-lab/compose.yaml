@@ -1,0 +1,65 @@
+name: se6013-m1-lab
+services:
+  vulnerable:
+    build:
+      context: .
+      dockerfile: app/Dockerfile
+    environment:
+      LAB_USER: ${LAB_USER:?Generate the local .env first}
+      LAB_PASSWORD: ${LAB_PASSWORD:?Generate the local .env first}
+      LAB_SESSION_SECRET: ${LAB_SESSION_SECRET:?Generate the local .env first}
+      LAB_PUBLIC_ORIGIN: ${LAB_PUBLIC_ORIGIN:-http://127.0.0.1:4317}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+    networks: [lab]
+    read_only: true
+    tmpfs: ["/tmp:size=32m,mode=1777"]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    mem_limit: 512m
+    cpus: 1.0
+    pids_limit: 128
+    init: true
+    restart: "no"
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:3000/lab/vulnerable/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 5s
+      timeout: 4s
+      retries: 10
+      start_period: 10s
+  control:
+    build:
+      context: .
+      dockerfile: control-ui/Dockerfile
+    environment:
+      CONTROL_USER: ${CONTROL_USER:?Generate the local .env first}
+      CONTROL_PASSWORD: ${CONTROL_PASSWORD:?Generate the local .env first}
+      LAB_PUBLIC_ORIGIN: ${LAB_PUBLIC_ORIGIN:-http://127.0.0.1:4317}
+      VULNERABLE_ORIGIN: http://vulnerable:3000
+      PORT: "4317"
+    ports:
+      - "127.0.0.1:${LAB_PORT:-4317}:4317"
+    networks: [lab, edge]
+    depends_on:
+      vulnerable:
+        condition: service_healthy
+    read_only: true
+    tmpfs: ["/tmp:size=16m,mode=1777"]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    mem_limit: 128m
+    cpus: 0.5
+    pids_limit: 64
+    init: true
+    restart: "no"
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:4317/healthz',{headers:{host:new URL(process.env.LAB_PUBLIC_ORIGIN).host}}).then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 5s
+      timeout: 4s
+      retries: 10
+networks:
+  lab:
+    internal: true
+    driver_opts:
+      com.docker.network.bridge.gateway_mode_ipv4: isolated
+  edge:
+    driver: bridge

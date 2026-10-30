@@ -4,7 +4,7 @@ The maintainer is @sodiptabadiabanurea. Members contribute through forks and pul
 
 ## Before opening a PR
 
-This repository is public. A PR's description, including your full name and matriculation number, is public too. Others may copy or index it even if you later edit it. Provide only your own details and tick the disclosure acknowledgement yourself. If you do not agree, contact the maintainer before submitting; the automatic gate has no member bypass.
+This repository and its pull requests are public. Include your full name and matriculation number in every PR.
 
 Do not upload passwords, tokens, real environment files, student records, raw course materials or private project code without explicit clearance for publication.
 
@@ -31,7 +31,7 @@ git push -u origin HEAD
 ```
 
 4. In your fork, select **Contribute**, then **Open pull request**. Set the base repository to `sodiptabadiabanurea/ntu-se6013-nextjs-auth-bypass` and base branch to `main`.
-5. Fill in the template. Keep the exact `Full name:` and `Matriculation number:` labels on separate lines, outside code blocks and comments. Tick the public-disclosure acknowledgement. Describe your change and the checks you actually ran.
+5. Fill in the template. Keep the exact `Full name:` and `Matriculation number:` labels on separate lines, outside code blocks and comments. Describe your change and the checks you actually ran.
 6. Wait for the identity check and maintainer review. If either identity field is absent, incomplete or a placeholder, the check fails. Edit the PR description to correct it; the check runs again. A green identity check is not code approval.
 7. Respond to review comments and push revisions to the same branch in your fork. New code commits require fresh approval. The maintainer verifies identity, reviews and merges accepted work.
 
@@ -41,7 +41,7 @@ Do not change the identity gate, CODEOWNERS or workflow to bypass these requirem
 
 The automatic check requires a non-placeholder full name and a 5-30 character matriculation identifier using letters, digits or hyphens, with at least one digit. This is a basic input check, not an official NTU format or identity lookup. If your genuine identifier does not fit, ask the maintainer to review the policy rather than entering a fake one.
 
-An unfilled template is rejected. Consent cannot be supplied inside an HTML comment or fenced example. The gate reports field errors without copying submitted identities into workflow logs. Your PR description remains public.
+An unfilled template is rejected. Identity fields must appear outside HTML comments and fenced examples. The gate reports field errors without copying submitted identities into workflow logs. Your PR description remains public.
 
 ## Keeping your fork current
 

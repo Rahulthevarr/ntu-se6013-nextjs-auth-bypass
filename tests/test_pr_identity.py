@@ -13,14 +13,10 @@ class IdentityTests(unittest.TestCase):
         self.assertIn("Matriculation number is required.", errors)
 
     # Synthetic identifiers below are fixtures, not student identities.
-    def body(self, name="Synthetic Gate Contributor", matric="SYNTHETIC0001", consent=True):
-        checked = "x" if consent else " "
-        return (
-            f"Full name: {name}\nMatriculation number: {matric}\n"
-            f"- [{checked}] I understand that my full name and matriculation number will be publicly visible, and I am submitting my own details.\n"
-        )
+    def body(self, name="Synthetic Gate Contributor", matric="SYNTHETIC0001"):
+        return f"Full name: {name}\nMatriculation number: {matric}\n"
 
-    def test_completed_fields_and_consent_are_accepted(self):
+    def test_only_completed_identity_fields_are_required(self):
         self.assertEqual(validate(self.body()), [])
 
     def test_changed_identifiers_are_accepted(self):
@@ -29,8 +25,11 @@ class IdentityTests(unittest.TestCase):
     def test_unicode_name_is_accepted(self):
         self.assertEqual(validate(self.body("Synthétique O'Fixture")), [])
 
-    def test_unchecked_consent_is_rejected(self):
-        self.assertTrue(validate(self.body(consent=False)))
+    def test_missing_name_is_rejected(self):
+        self.assertIn("Full name is required.", validate("Matriculation number: SYNTHETIC0001\n"))
+
+    def test_missing_matric_is_rejected(self):
+        self.assertIn("Matriculation number is required.", validate("Full name: Synthetic Gate Contributor\n"))
 
     def test_placeholder_name_is_rejected(self):
         self.assertTrue(validate(self.body(name="YOUR FULL NAME")))

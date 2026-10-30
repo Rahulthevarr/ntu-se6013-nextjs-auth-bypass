@@ -1,9 +1,5 @@
 import re
 
-CONSENT = (
-    "I understand that my full name and matriculation number will be publicly "
-    "visible, and I am submitting my own details."
-)
 PLACEHOLDERS = {"your full name", "your name", "full name", "name", "n/a", "na", "none", "null", "todo", "tbd", "pending"}
 
 
@@ -41,6 +37,4 @@ def validate(body):
     # This is a presence/shape check, not an official NTU identity lookup.
     if matric and (not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9-]{4,29}", matric) or not any(c.isdigit() for c in matric)):
         errors.append("Matriculation number must be a completed 5-30 character identifier containing a digit.")
-    if not re.search(r"^- \[[xX]\] " + re.escape(CONSENT) + r"[ \t]*$", body, re.MULTILINE):
-        errors.append("Public identity disclosure consent must be checked.")
     return errors

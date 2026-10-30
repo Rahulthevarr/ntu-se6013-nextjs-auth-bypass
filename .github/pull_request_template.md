@@ -1,11 +1,9 @@
 ## Contributor identity (required)
 
-This PR is public. Your full name and matriculation number below will be visible to everyone and may be copied or indexed. Submit only your own details. Contact the maintainer before submitting if you do not agree to public disclosure.
+Provide your full name and matriculation number below.
 
 Full name:
 Matriculation number:
-
-- [ ] I understand that my full name and matriculation number will be publicly visible, and I am submitting my own details.
 
 ## Changes
 

@@ -1,0 +1,93 @@
+name: Contributor identity gate
+
+on:
+  pull_request_target:
+    branches: [main]
+    types: [opened, reopened, synchronize, edited, ready_for_review]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: read
+  statuses: write
+
+concurrency:
+  group: contributor-identity-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  identity:
+    name: Validate PR identity
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Mark the current PR head pending
+        if: github.event_name == 'pull_request_target'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          gh api "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER" > "$RUNNER_TEMP/pr-identity.json"
+          head_sha="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["head"]["sha"])' "$RUNNER_TEMP/pr-identity.json")"
+          gh api --method POST "repos/$GITHUB_REPOSITORY/statuses/$head_sha"             -f state=pending -f context='Contributor identity'             -f description='Checking required contributor identity and consent' > /dev/null
+
+      - name: Check out trusted base code only
+        id: checkout
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Test the identity validator
+        id: tests
+        run: python3 -m unittest discover -s tests -v
+
+      - name: Publish the identity decision on the actual PR head
+        if: always() && github.event_name == 'pull_request_target'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          TEST_OUTCOME: ${{ steps.tests.outcome }}
+          CHECKOUT_OUTCOME: ${{ steps.checkout.outcome }}
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          import subprocess
+          import sys
+          from pathlib import Path
+
+          def api(*args):
+              result = subprocess.run(["gh", "api", *args], capture_output=True, text=True, check=True)
+              return json.loads(result.stdout) if result.stdout.strip() else None
+
+          repo = os.environ["GITHUB_REPOSITORY"]
+          number = os.environ["PR_NUMBER"]
+          snapshot_path = Path(os.environ["RUNNER_TEMP"]) / "pr-identity.json"
+          if not snapshot_path.exists():
+              sys.exit("Cannot verify the PR snapshot; identity status must not pass.")
+          original = json.loads(snapshot_path.read_text())
+          errors = []
+          if os.environ["TEST_OUTCOME"] != "success" or os.environ["CHECKOUT_OUTCOME"] != "success":
+              errors = ["Trusted identity validator checks did not pass."]
+          else:
+              from scripts.pr_identity import validate
+              errors = validate(original.get("body"))
+          current = api(f"repos/{repo}/pulls/{number}")
+          if current["head"]["sha"] != original["head"]["sha"] or current.get("body") != original.get("body"):
+              errors.append("PR changed during validation; a fresh check is required.")
+          state = "failure" if errors else "success"
+          description = "Required identity or consent is missing/invalid" if errors else "Fields and consent completed; maintainer verification still required"
+          run_url = f"https://github.com/{repo}/actions/runs/{os.environ['GITHUB_RUN_ID']}"
+          api("--method", "POST", f"repos/{repo}/statuses/{original['head']['sha']}",
+              "-f", f"state={state}", "-f", "context=Contributor identity",
+              "-f", f"description={description}", "-f", f"target_url={run_url}")
+          for error in errors:
+              print(error)
+          if not errors:
+              print("Required fields and disclosure consent are complete. Authenticity and code review remain with the maintainer.")
+          sys.exit(1 if errors else 0)
+          PY

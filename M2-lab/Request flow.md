@@ -23,4 +23,48 @@ Same request, header value = "middleware" (single occurrence, count = 1)
 | Header value | /lab/vulnerable/dashboard | /lab/vulnerable/api/records |
 |---|---|---|
 | `middleware` (count=1) | 307 (redirect, denied) | 401 (unauthorized) |
-| `middleware:middleware:middleware:middleware:middleware`
+| `middleware:middleware:middleware:middleware:middleware` (count=5) | 200 + protected marker | 200 + protected marker |
+
+These are the reviewer's own spot-check results, recorded here as the
+condition M3's runner must reproduce - not results from M3's runner itself.
+
+## Same request against v14.2.25 (patched)
+
+Client sends request with the 5x-repeated header value
+  (attacker has no way to also supply a valid x-middleware-subrequest-id,
+  since that secret is generated randomly per server boot and never
+  exposed to clients - see source-map.md for the limitation on this claim)
+  -> filterInternalHeaders checks x-middleware-subrequest-id against the
+     server's own secret -> mismatch (or missing)
+  -> x-middleware-subrequest header is deleted
+  -> sandbox.ts's check sees no valid header, regardless of repetition count
+  -> Middleware runs normally -> auth check enforced
+
+Note: this diagram describes the CVE-2025-29927 bypass path and its fix
+only. It does not address CVE-2025-30218 (a separate, low-severity
+id-leakage issue also present in 14.2.25), which was out of scope for
+this lab and not tested here. See source-map.md for details.
+
+## M2 -> M3 handoff
+
+**Exact version:** 14.2.24 (vulnerable baseline)
+
+**Full lab paths to test:**
+- /lab/vulnerable/dashboard
+- /lab/vulnerable/api/records
+
+**Working header value (positive case):**
+x-middleware-subrequest: middleware:middleware:middleware:middleware:middleware
+(confirm the exact middleware name string - params.name - from M1's
+middleware.ts/config before hardcoding it into the runner; "middleware"
+above is a placeholder matching the generic case)
+
+**Negative control (required):**
+x-middleware-subrequest: middleware   (single occurrence)
+Expected: 307 on /dashboard, 401 on /api/records, no protected marker -
+this proves the scenario tests the 5-repetition condition specifically,
+not just "any header present."
+
+**Scenario definitions to add/update in the runner:**
+- anonymous-cve-negative: single-occurrence header -> expect denial
+- anonymous-cve-positive: 5x-repeated header -> expect marker present

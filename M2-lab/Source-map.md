@@ -80,8 +80,11 @@ is supplied, so the mismatch condition is met and the forged header is
 removed before sandbox.ts's check ever reads it.
 
 **Causal chain confirmed:** filterInternalHeaders (server-ipc/utils.ts)
-runs on the request before it reaches the sandbox's header check, so a
-forged header never survives to be read in the patched version.
+runs on the request before it reaches the sandbox's header check, For this request, no valid server-issued identifier is supplied, so the
+identifier-mismatch condition is met and the original header is removed
+before sandbox.ts's check reads it. This is a statement about this
+specific request, not a claim covering every possible external attacker
+or request shape.
 
 ## Limitation on the patched mechanism (reviewer-flagged)
 

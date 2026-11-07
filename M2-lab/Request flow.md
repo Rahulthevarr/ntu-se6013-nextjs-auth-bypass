@@ -47,7 +47,7 @@ identifier can never be exposed under any circumstance.
 Note: this diagram describes the CVE-2025-29927 bypass path and its fix
 only. It does not address CVE-2025-30218 (a separate, low-severity
 id-leakage issue also present in 14.2.25), which was out of scope for
-this lab and not tested here. See source-map.md for details.
+this lab and not tested here. See Source-map.md for details.
 
 ## Deployment paths vs. shared-source contract
 

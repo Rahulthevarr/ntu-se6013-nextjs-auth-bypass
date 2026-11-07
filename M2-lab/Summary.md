@@ -71,8 +71,11 @@ See Source-map.md for the complete table with exact bounds
   random per-boot secret and the filterInternalHeaders check that strips
   forged headers before they reach sandbox.ts
 - Causal chain confirmed: filterInternalHeaders runs before sandbox.ts's
-  header check, so a forged header never survives to be read in the
-  patched version
+  header check, For the fixed request evaluated here, no valid identifier is supplied, so
+  the mismatch condition triggers and the forged header is removed before
+reaching the middleware-skip check. This is a statement about this
+specific request, not a general guarantee about the identifier's
+confidentiality in all cases - see the CVE-2025-30218 limitation below.
 
 ### Reviewer measurements (independent spot-check; not run by M2 or M3)
 - 14.2.24 baseline: single-name header -> 307 on /dashboard, 401 on

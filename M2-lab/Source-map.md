@@ -70,10 +70,14 @@ if (header === 'x-middleware-subrequest' &&
 If it doesn't match (or is absent, as for any external attacker), the
 original header is deleted before sandbox.ts's check ever reads it.
 
-**What changed:** the fix adds a per-boot random secret that only
-Next.js's own internal requests can know, and strips the original header
-from any request that can't prove it holds that secret. This closes the
-gap without removing the internal-subrequest mechanism itself.
+**What changed:** the fix adds a random per-boot secret and a filtering predicate in
+filterInternalHeaders (server-ipc/utils.ts, lines 64-69 in v14.2.25) that
+is conditional on identifier mismatch: it strips the original
+x-middleware-subrequest header specifically when the incoming
+x-middleware-subrequest-id does not match the server's secret. For the
+fixed CVE-2025-29927 request evaluated in this lab, no valid identifier
+is supplied, so the mismatch condition is met and the forged header is
+removed before sandbox.ts's check ever reads it.
 
 **Causal chain confirmed:** filterInternalHeaders (server-ipc/utils.ts)
 runs on the request before it reaches the sandbox's header check, so a

@@ -16,15 +16,15 @@ external client could construct that same header value and be treated as
 trusted internal traffic.
 
 ## The fix (v14.2.25)
-Next.js now generates a random, per-boot secret (middlewareSubrequestId)
-that only its own internal requests can know. Genuine internal subrequests
-are stamped with a second header, x-middleware-subrequest-id, carrying
-that secret. Before a request reaches the middleware-skip check,
-filterInternalHeaders verifies the incoming -id matches the server's
-secret; if it doesn't (as for any external attacker), the original
-x-middleware-subrequest header is stripped regardless of its repetition
-count. (See Source-map.md for exact file/line references and
-Request-flow.md for the before/after diagrams and negative control.)
+Next.js now generates a random, per-boot secret (middlewareSubrequestId).
+Genuine internal subrequests are stamped with this secret via a second
+header, x-middleware-subrequest-id. The filtering predicate in
+filterInternalHeaders is conditional on identifier mismatch: it checks
+whether the incoming x-middleware-subrequest-id matches the server's own
+secret, and strips the original x-middleware-subrequest header only when
+it does not. For the fixed CVE-2025-29927 request used in this lab, no
+valid server-issued identifier is supplied, so the mismatch causes
+14.2.25 to remove the forged subrequest header.
 
 This fix is not an absolute confidentiality guarantee for the secret
 itself - see the Limitations section below.

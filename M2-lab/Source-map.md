@@ -67,8 +67,10 @@ if (header === 'x-middleware-subrequest' &&
   delete headers['x-middleware-subrequest']
 }
 ```
-If it doesn't match (or is absent, as for any external attacker), the
-original header is deleted before sandbox.ts's check ever reads it.
+If it doesn't match (or is absent,For the fixed request used here, no valid server-issued identifier is
+supplied, so the identifier-mismatch condition removes the original
+header before the sandbox check.), 
+the original header is deleted before sandbox's check ever reads it.
 
 **What changed:** the fix adds a random per-boot secret and a filtering predicate in
 filterInternalHeaders (server-ipc/utils.ts, lines 64-69 in v14.2.25) that

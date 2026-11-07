@@ -23,8 +23,8 @@ that secret. Before a request reaches the middleware-skip check,
 filterInternalHeaders verifies the incoming -id matches the server's
 secret; if it doesn't (as for any external attacker), the original
 x-middleware-subrequest header is stripped regardless of its repetition
-count. (See source-map.md for exact file/line references and
-request-flow.md for the before/after diagrams and negative control.)
+count. (See Source-map.md for exact file/line references and
+Request-flow.md for the before/after diagrams and negative control.)
 
 This fix is not an absolute confidentiality guarantee for the secret
 itself - see the Limitations section below.
@@ -53,7 +53,7 @@ itself - see the Limitations section below.
   source-map.md for the full qualification.
 
 ## Affected version ranges (official advisory)
-See source-map.md for the complete table with exact bounds
+See Source-map.md for the complete table with exact bounds
 (e.g. 14.x: >=14.0.0, <14.2.25) from GHSA-f82v-jwr5-mffw.
 
 ## Evidence classification

@@ -96,8 +96,10 @@ confidentiality limitation.
 
 ## Handoffs
 - M3: exact version (14.2.24), full lab paths including the /1 and /2
-  deployment mapping, working 5x-repeated header value, the required
-  negative control (single occurrence), and the requirement to test the
+  deployment mapping, working 5x-repeated header value, The active negative-control scenario sends `not-a-middleware-name`.
+A single real middleware name is a separate, supplemental threshold
+regression check, not a required replacement for or addition to the
+active scenario set, and the requirement to test the
   private target directly rather than through the browser gateway - see
   [request flow](Request%20flow.md).
 - M4: exact file/line references for the patch mechanism, for explaining

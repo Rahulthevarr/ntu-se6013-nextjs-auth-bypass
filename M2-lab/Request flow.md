@@ -30,28 +30,58 @@ condition M3's runner must reproduce - not results from M3's runner itself.
 
 ## Same request against v14.2.25 (patched)
 
-Client sends request with the 5x-repeated header value
-  (attacker has no way to also supply a valid x-middleware-subrequest-id,
-  since that secret is generated randomly per server boot and never
-  exposed to clients - see source-map.md for the limitation on this claim)
+Client sends request with the 5x-repeated header value, but supplies no
+valid x-middleware-subrequest-id (the server's per-boot secret is not
+disclosed to this request).
   -> filterInternalHeaders checks x-middleware-subrequest-id against the
      server's own secret -> mismatch (or missing)
   -> x-middleware-subrequest header is deleted
   -> sandbox.ts's check sees no valid header, regardless of repetition count
   -> Middleware runs normally -> auth check enforced
 
+For the fixed CVE-2025-29927 request used in this lab, no valid
+server-issued identifier is supplied, so 14.2.25 removes the forged
+header and the bypass fails. This is narrower than a claim that the
+identifier can never be exposed under any circumstance.
+
 Note: this diagram describes the CVE-2025-29927 bypass path and its fix
 only. It does not address CVE-2025-30218 (a separate, low-severity
 id-leakage issue also present in 14.2.25), which was out of scope for
 this lab and not tested here. See source-map.md for details.
 
+## Deployment paths vs. shared-source contract
+
+The shared-source contract (this repo's app code) defines:
+- /lab/vulnerable/dashboard
+- /lab/vulnerable/api/records
+
+The current operator-gated preparation web additionally maps:
+- /1 -> the original (vulnerable) app, with direct routes
+  /1/dashboard and /1/api/records
+- /2 -> the historical patched app, with direct routes
+  /2/dashboard and /2/api/records
+
+These are two separate environments, not a replacement of one by the
+other; keep both documented. The browser gateway in front of the hosted
+preparation web filters internal-use headers, so M3 must evaluate the
+private target directly rather than through the public browser gateway,
+which would strip the exact header this test depends on. Operator
+authentication on the gateway and the target application's own session
+are separate concerns and must not be conflated.
+
 ## M2 -> M3 handoff
 
 **Exact version:** 14.2.24 (vulnerable baseline)
 
-**Full lab paths to test:**
+**Full lab paths to test (shared-source contract):**
 - /lab/vulnerable/dashboard
 - /lab/vulnerable/api/records
+
+**Hosted preparation web mapping (if testing there instead):**
+- /1/dashboard, /1/api/records -> vulnerable (14.2.24)
+- /2/dashboard, /2/api/records -> patched (14.2.25)
+- Test the private target directly, not through the public browser
+  gateway, which filters the x-middleware-subrequest header.
 
 **Working header value (positive case):**
 x-middleware-subrequest: middleware:middleware:middleware:middleware:middleware
